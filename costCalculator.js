@@ -4,7 +4,6 @@ Does everything asynchronously and also determines when to stop reading the page
 **/
 
 var request = require("request");
-var async = require("async");
 
 var productTypes = ["Clock", "Watch"];
 var pageNum = 1;

@@ -1,34 +1,42 @@
-/** This program calculates how much it will cost to buy everything in the given categories **/
+/**
+This program calculates how much it will cost to buy everything in the given categories.
+Does everything asynchronously and also determines when to stop reading the pages dynamically.
+**/
 
 var request = require("request");
 var async = require("async");
 
 var productTypes = ["Clock", "Watch"];
+var pageNum = 1;
 var totalCost = 0.0;
-var tax = 1.13; // Tax multiplier; ASSUMING ONTARIO
+var shopifyProducts = [];
+var tax = 1.00; // Tax multiplier; currently set to do nothing
 
-// Hardcoded links, I'm sorry :'(
-var productPages = [
-	"http://shopicruit.myshopify.com/products.json?page=1",
-	"http://shopicruit.myshopify.com/products.json?page=2",
-	"http://shopicruit.myshopify.com/products.json?page=3",
-	"http://shopicruit.myshopify.com/products.json?page=4",
-	"http://shopicruit.myshopify.com/products.json?page=5",
-];
+var productPage = "http://shopicruit.myshopify.com/products.json?page=";
 
-// Collect the results from the pages into one array
-async.map(productPages, getJSON, function (err, res){
-	if (err) {
-		return console.log(err);
-	}
-
-  	totalCost = getTotalCost(res, productTypes);
-  	console.log(totalCost);
-});
+getJSON(productPage + pageNum, callbackHandler);
 
 /***************** HELPER FUNCTIONS *****************/
 
-// Get JSON from a page given the url
+// Determines what to do next given the JSON body
+function callbackHandler(err, body) {
+	if (err) {
+		return console.error(err);
+	} else {
+		console.log("Successfully read page " + pageNum);
+	}
+
+	if (body.products.length === 0) {
+		totalCost = getTotalCost(shopifyProducts, productTypes);
+		console.log("Total cost is: " + totalCost);
+	} else {
+		pageNum++;
+		shopifyProducts.push(body);
+		getJSON(productPage + pageNum, callbackHandler);
+	}
+}
+
+// Get JSON from a page given the url and calls upon a callback handler to determine the next step
 function getJSON(url, callback) {
   	var options = {
 	    url :  url,
